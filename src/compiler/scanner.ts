@@ -33,8 +33,8 @@ namespace ts {
         reScanTemplateToken(): SyntaxKind;
         scanJsxIdentifier(): SyntaxKind;
         scanJsxAttributeValue(): SyntaxKind;
-        reScanJsxToken(): SyntaxKind;
-        scanJsxToken(): SyntaxKind;
+        reScanJsxToken(isFormatting?: boolean): SyntaxKind;
+        scanJsxToken(isFormatting?: boolean): SyntaxKind;
         scanJSDocToken(): JsDocSyntaxKind;
         scan(): SyntaxKind;
         getText(): string;
@@ -305,14 +305,14 @@ namespace ts {
         let pos = 0;
         let lineStart = 0;
         while (pos < text.length) {
-           const ch = text.charCodeAt(pos);
-           pos++;
-           switch (ch) {
+            const ch = text.charCodeAt(pos);
+            pos++;
+            switch (ch) {
                 case CharacterCodes.carriageReturn:
                     if (text.charCodeAt(pos) === CharacterCodes.lineFeed) {
                         pos++;
                     }
-                    // falls through
+                // falls through
                 case CharacterCodes.lineFeed:
                     result.push(lineStart);
                     lineStart = pos;
@@ -398,145 +398,145 @@ namespace ts {
             ch === CharacterCodes.mathematicalSpace ||
             ch === CharacterCodes.ideographicSpace ||
             ch === CharacterCodes.byteOrderMark;
-      }
+    }
 
-      export function isLineBreak(ch: number): boolean {
-          // ES5 7.3:
-          // The ECMAScript line terminator characters are listed in Table 3.
-          //     Table 3: Line Terminator Characters
-          //     Code Unit Value     Name                    Formal Name
-          //     \u000A              Line Feed               <LF>
-          //     \u000D              Carriage Return         <CR>
-          //     \u2028              Line separator          <LS>
-          //     \u2029              Paragraph separator     <PS>
-          // Only the characters in Table 3 are treated as line terminators. Other new line or line
-          // breaking characters are treated as white space but not as line terminators.
+    export function isLineBreak(ch: number): boolean {
+        // ES5 7.3:
+        // The ECMAScript line terminator characters are listed in Table 3.
+        //     Table 3: Line Terminator Characters
+        //     Code Unit Value     Name                    Formal Name
+        //     \u000A              Line Feed               <LF>
+        //     \u000D              Carriage Return         <CR>
+        //     \u2028              Line separator          <LS>
+        //     \u2029              Paragraph separator     <PS>
+        // Only the characters in Table 3 are treated as line terminators. Other new line or line
+        // breaking characters are treated as white space but not as line terminators.
 
-          return ch === CharacterCodes.lineFeed ||
-              ch === CharacterCodes.carriageReturn ||
-              ch === CharacterCodes.lineSeparator ||
-              ch === CharacterCodes.paragraphSeparator;
-      }
+        return ch === CharacterCodes.lineFeed ||
+            ch === CharacterCodes.carriageReturn ||
+            ch === CharacterCodes.lineSeparator ||
+            ch === CharacterCodes.paragraphSeparator;
+    }
 
-      function isDigit(ch: number): boolean {
-          return ch >= CharacterCodes._0 && ch <= CharacterCodes._9;
-      }
+    function isDigit(ch: number): boolean {
+        return ch >= CharacterCodes._0 && ch <= CharacterCodes._9;
+    }
 
-      /* @internal */
-      export function isOctalDigit(ch: number): boolean {
-          return ch >= CharacterCodes._0 && ch <= CharacterCodes._7;
-      }
+    /* @internal */
+    export function isOctalDigit(ch: number): boolean {
+        return ch >= CharacterCodes._0 && ch <= CharacterCodes._7;
+    }
 
-      export function couldStartTrivia(text: string, pos: number): boolean {
-          // Keep in sync with skipTrivia
-          const ch = text.charCodeAt(pos);
-          switch (ch) {
-              case CharacterCodes.carriageReturn:
-              case CharacterCodes.lineFeed:
-              case CharacterCodes.tab:
-              case CharacterCodes.verticalTab:
-              case CharacterCodes.formFeed:
-              case CharacterCodes.space:
-              case CharacterCodes.slash:
-                  // starts of normal trivia
-              case CharacterCodes.lessThan:
-              case CharacterCodes.bar:
-              case CharacterCodes.equals:
-              case CharacterCodes.greaterThan:
-                  // Starts of conflict marker trivia
-                  return true;
-              case CharacterCodes.hash:
-                  // Only if its the beginning can we have #! trivia
-                  return pos === 0;
-              default:
-                  return ch > CharacterCodes.maxAsciiCharacter;
-          }
-      }
+    export function couldStartTrivia(text: string, pos: number): boolean {
+        // Keep in sync with skipTrivia
+        const ch = text.charCodeAt(pos);
+        switch (ch) {
+            case CharacterCodes.carriageReturn:
+            case CharacterCodes.lineFeed:
+            case CharacterCodes.tab:
+            case CharacterCodes.verticalTab:
+            case CharacterCodes.formFeed:
+            case CharacterCodes.space:
+            case CharacterCodes.slash:
+            // starts of normal trivia
+            case CharacterCodes.lessThan:
+            case CharacterCodes.bar:
+            case CharacterCodes.equals:
+            case CharacterCodes.greaterThan:
+                // Starts of conflict marker trivia
+                return true;
+            case CharacterCodes.hash:
+                // Only if its the beginning can we have #! trivia
+                return pos === 0;
+            default:
+                return ch > CharacterCodes.maxAsciiCharacter;
+        }
+    }
 
-      /* @internal */
-      export function skipTrivia(text: string, pos: number, stopAfterLineBreak?: boolean, stopAtComments = false): number {
-          if (positionIsSynthesized(pos)) {
-              return pos;
-          }
+    /* @internal */
+    export function skipTrivia(text: string, pos: number, stopAfterLineBreak?: boolean, stopAtComments = false): number {
+        if (positionIsSynthesized(pos)) {
+            return pos;
+        }
 
-          // Keep in sync with couldStartTrivia
-          while (true) {
-              const ch = text.charCodeAt(pos);
-              switch (ch) {
-                  case CharacterCodes.carriageReturn:
-                      if (text.charCodeAt(pos + 1) === CharacterCodes.lineFeed) {
-                          pos++;
-                      }
-                      // falls through
-                  case CharacterCodes.lineFeed:
-                      pos++;
-                      if (stopAfterLineBreak) {
-                          return pos;
-                      }
-                      continue;
-                  case CharacterCodes.tab:
-                  case CharacterCodes.verticalTab:
-                  case CharacterCodes.formFeed:
-                  case CharacterCodes.space:
-                      pos++;
-                      continue;
-                  case CharacterCodes.slash:
-                      if (stopAtComments) {
-                          break;
-                      }
-                      if (text.charCodeAt(pos + 1) === CharacterCodes.slash) {
-                          pos += 2;
-                          while (pos < text.length) {
-                              if (isLineBreak(text.charCodeAt(pos))) {
-                                  break;
-                              }
-                              pos++;
-                          }
-                          continue;
-                      }
-                      if (text.charCodeAt(pos + 1) === CharacterCodes.asterisk) {
-                          pos += 2;
-                          while (pos < text.length) {
-                              if (text.charCodeAt(pos) === CharacterCodes.asterisk && text.charCodeAt(pos + 1) === CharacterCodes.slash) {
-                                  pos += 2;
-                                  break;
-                              }
-                              pos++;
-                          }
-                          continue;
-                      }
-                      break;
+        // Keep in sync with couldStartTrivia
+        while (true) {
+            const ch = text.charCodeAt(pos);
+            switch (ch) {
+                case CharacterCodes.carriageReturn:
+                    if (text.charCodeAt(pos + 1) === CharacterCodes.lineFeed) {
+                        pos++;
+                    }
+                // falls through
+                case CharacterCodes.lineFeed:
+                    pos++;
+                    if (stopAfterLineBreak) {
+                        return pos;
+                    }
+                    continue;
+                case CharacterCodes.tab:
+                case CharacterCodes.verticalTab:
+                case CharacterCodes.formFeed:
+                case CharacterCodes.space:
+                    pos++;
+                    continue;
+                case CharacterCodes.slash:
+                    if (stopAtComments) {
+                        break;
+                    }
+                    if (text.charCodeAt(pos + 1) === CharacterCodes.slash) {
+                        pos += 2;
+                        while (pos < text.length) {
+                            if (isLineBreak(text.charCodeAt(pos))) {
+                                break;
+                            }
+                            pos++;
+                        }
+                        continue;
+                    }
+                    if (text.charCodeAt(pos + 1) === CharacterCodes.asterisk) {
+                        pos += 2;
+                        while (pos < text.length) {
+                            if (text.charCodeAt(pos) === CharacterCodes.asterisk && text.charCodeAt(pos + 1) === CharacterCodes.slash) {
+                                pos += 2;
+                                break;
+                            }
+                            pos++;
+                        }
+                        continue;
+                    }
+                    break;
 
-                  case CharacterCodes.lessThan:
-                  case CharacterCodes.bar:
-                  case CharacterCodes.equals:
-                  case CharacterCodes.greaterThan:
-                      if (isConflictMarkerTrivia(text, pos)) {
-                          pos = scanConflictMarkerTrivia(text, pos);
-                          continue;
-                      }
-                      break;
+                case CharacterCodes.lessThan:
+                case CharacterCodes.bar:
+                case CharacterCodes.equals:
+                case CharacterCodes.greaterThan:
+                    if (isConflictMarkerTrivia(text, pos)) {
+                        pos = scanConflictMarkerTrivia(text, pos);
+                        continue;
+                    }
+                    break;
 
-                  case CharacterCodes.hash:
-                      if (pos === 0 && isShebangTrivia(text, pos)) {
-                          pos = scanShebangTrivia(text, pos);
-                          continue;
-                      }
-                      break;
+                case CharacterCodes.hash:
+                    if (pos === 0 && isShebangTrivia(text, pos)) {
+                        pos = scanShebangTrivia(text, pos);
+                        continue;
+                    }
+                    break;
 
-                  default:
-                      if (ch > CharacterCodes.maxAsciiCharacter && (isWhiteSpaceLike(ch))) {
-                          pos++;
-                          continue;
-                      }
-                      break;
-              }
-              return pos;
-          }
-      }
+                default:
+                    if (ch > CharacterCodes.maxAsciiCharacter && (isWhiteSpaceLike(ch))) {
+                        pos++;
+                        continue;
+                    }
+                    break;
+            }
+            return pos;
+        }
+    }
 
-      // All conflict markers consist of the same character repeated seven times.  If it is
-      // a <<<<<<< or >>>>>>> marker then it is also followed by a space.
+    // All conflict markers consist of the same character repeated seven times.  If it is
+    // a <<<<<<< or >>>>>>> marker then it is also followed by a space.
     const mergeConflictMarkerLength = "<<<<<<<".length;
 
     function isConflictMarkerTrivia(text: string, pos: number) {
@@ -600,7 +600,7 @@ namespace ts {
     }
 
     function scanShebangTrivia(text: string, pos: number) {
-        const shebang = shebangTriviaRegex.exec(text)[0];
+        const shebang = shebangTriviaRegex.exec(text) [0];
         pos = pos + shebang.length;
         return pos;
     }
@@ -640,7 +640,7 @@ namespace ts {
                     if (text.charCodeAt(pos + 1) === CharacterCodes.lineFeed) {
                         pos++;
                     }
-                    // falls through
+                // falls through
                 case CharacterCodes.lineFeed:
                     pos++;
                     if (trailing) {
@@ -795,12 +795,12 @@ namespace ts {
 
     // Creates a scanner over a (possibly unspecified) range of a piece of text.
     export function createScanner(languageVersion: ScriptTarget,
-                                  skipTrivia: boolean,
-                                  languageVariant = LanguageVariant.Standard,
-                                  text?: string,
-                                  onError?: ErrorCallback,
-                                  start?: number,
-                                  length?: number): Scanner {
+        skipTrivia: boolean,
+        languageVariant = LanguageVariant.Standard,
+        text?: string,
+        onError?: ErrorCallback,
+        start?: number,
+        length?: number): Scanner {
         // Current position (end position of text of current token)
         let pos: number;
 
@@ -1166,7 +1166,7 @@ namespace ts {
                     if (pos < end && text.charCodeAt(pos) === CharacterCodes.lineFeed) {
                         pos++;
                     }
-                    // falls through
+                // falls through
                 case CharacterCodes.lineFeed:
                 case CharacterCodes.lineSeparator:
                 case CharacterCodes.paragraphSeparator:
@@ -1577,10 +1577,10 @@ namespace ts {
                             tokenFlags |= TokenFlags.Octal;
                             return token = SyntaxKind.NumericLiteral;
                         }
-                        // This fall-through is a deviation from the EcmaScript grammar. The grammar says that a leading zero
-                        // can only be followed by an octal digit, a dot, or the end of the number literal. However, we are being
-                        // permissive and allowing decimal digits of the form 08* and 09* (which many browsers also do).
-                        // falls through
+                    // This fall-through is a deviation from the EcmaScript grammar. The grammar says that a leading zero
+                    // can only be followed by an octal digit, a dot, or the end of the number literal. However, we are being
+                    // permissive and allowing decimal digits of the form 08* and 09* (which many browsers also do).
+                    // falls through
                     case CharacterCodes._1:
                     case CharacterCodes._2:
                     case CharacterCodes._3:
@@ -1619,8 +1619,8 @@ namespace ts {
                             return pos += 2, token = SyntaxKind.LessThanEqualsToken;
                         }
                         if (languageVariant === LanguageVariant.JSX &&
-                                text.charCodeAt(pos + 1) === CharacterCodes.slash &&
-                                text.charCodeAt(pos + 2) !== CharacterCodes.asterisk) {
+                            text.charCodeAt(pos + 1) === CharacterCodes.slash &&
+                            text.charCodeAt(pos + 2) !== CharacterCodes.asterisk) {
                             return pos += 2, token = SyntaxKind.LessThanSlashToken;
                         }
                         pos++;
@@ -1828,12 +1828,12 @@ namespace ts {
             return token = scanTemplateAndSetTokenValue();
         }
 
-        function reScanJsxToken(): SyntaxKind {
+        function reScanJsxToken(isFormatting = false): SyntaxKind {
             pos = tokenPos = startPos;
-            return token = scanJsxToken();
+            return token = scanJsxToken(isFormatting);
         }
 
-        function scanJsxToken(): SyntaxKind {
+        function scanJsxToken(isFormatting = false): SyntaxKind {
             startPos = tokenPos = pos;
 
             if (pos >= end) {
@@ -1856,7 +1856,9 @@ namespace ts {
             }
 
             // First non-whitespace character on this line.
-            let firstNonWhitespace = 0;
+            // if we just started and the previous character was a line break,
+            // we want to treat a token with only whitespace from here as JsxTextAllWhiteSpaces
+            let firstNonWhitespace = isFormatting && pos === startPos && isLineBreak(text.charCodeAt(pos - 1)) ? -1 : 0;
             // These initial values are special because the first line is:
             // firstNonWhitespace = 0 to indicate that we want leading whitspace,
 
@@ -1879,13 +1881,39 @@ namespace ts {
                 //      </div> becomes <div></div>
                 //
                 //      <div>----</div> becomes <div>----</div>
-                if (isLineBreak(char) && firstNonWhitespace === 0) {
-                    firstNonWhitespace = -1;
+                if (isFormatting) {
+                    if (isLineBreak(char)) {
+                        if (firstNonWhitespace === 0) {
+                            firstNonWhitespace = -1;
+                        }
+                        else if (firstNonWhitespace !== -1) {
+                            // If we've reached the last line in the jsx text,
+                            // and it's only whitespace, do not consume it
+                            // as a part of the text
+                            let i = 1;
+                            while (isWhiteSpaceLike(text.charCodeAt(pos + i))) {
+                                i++;
+                            }
+                            if (text.charCodeAt(pos + i) === CharacterCodes.lessThan) {
+                                break;
+                            }
+                        }
+                    }
+
+                    if ((!isLineBreak(char) || firstNonWhitespace !== 0) && !isWhiteSpaceLike(char)) {
+                        firstNonWhitespace = pos;
+                    }
+                    pos++;
                 }
-                else if (!isWhiteSpaceLike(char)) {
-                    firstNonWhitespace = pos;
+                else {
+                    if (isLineBreak(char) && firstNonWhitespace === 0) {
+                        firstNonWhitespace = -1;
+                    }
+                    else if (!isWhiteSpaceLike(char)) {
+                        firstNonWhitespace = pos;
+                    }
+                    pos++;
                 }
-                pos++;
             }
 
             return firstNonWhitespace === -1 ? SyntaxKind.JsxTextAllWhiteSpaces : SyntaxKind.JsxText;
